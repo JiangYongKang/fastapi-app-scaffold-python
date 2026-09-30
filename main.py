@@ -1,12 +1,16 @@
+"""模板入口：保留开箱即用行为。
+
+直接运行：python main.py
+ASGI 入口：main:app
+"""
+
+from __future__ import annotations
+
 import uvicorn
-from fastapi import FastAPI
 
-app = FastAPI()
+from app.application import create_app
 
-
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+app = create_app()
 
 
 if __name__ == "__main__":
