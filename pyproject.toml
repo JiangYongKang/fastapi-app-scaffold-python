@@ -16,10 +16,16 @@ dev = [
     "pytest-asyncio>=1.4.0",
 ]
 
-[pytest]
+[tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 filterwarnings = [
-    "ignore::DeprecationWarning:starlette.*",
-    "ignore::DeprecationWarning:fastapi.*",
+    # starlette/anyio 测试客户端的第三方弃用告警，与本脚手架无关：
+    # StarletteDeprecationWarning 继承 UserWarning；anyio 的是 DeprecationWarning
+    "ignore::starlette.exceptions.StarletteDeprecationWarning",
+    "ignore::DeprecationWarning",
 ]
+
+[tool.ruff.lint]
+# B008: FastAPI 的 Depends(...) 作为参数默认值是官方推荐写法
+ignore = ["B008"]

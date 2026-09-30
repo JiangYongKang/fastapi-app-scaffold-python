@@ -1,19 +1,20 @@
-"""pytest 公共夹具与噪音抑制。"""
+"""pytest 公共夹具。
+
+第三方库（starlette/anyio 测试客户端）的弃用告警通过 pyproject.toml
+的 [pytest].filterwarnings 统一忽略，不在各用例中分散处理。
+"""
 
 from __future__ import annotations
 
 import logging
-import warnings
 from collections.abc import Iterator
 
 import pytest
 
-# 屏蔽 TestClient 关于 httpx 的弃用告警噪音
-warnings.filterwarnings("ignore", category=DeprecationWarning)
-
 
 @pytest.fixture(autouse=True)
 def _quiet_httpx() -> Iterator[None]:
+    """压低 httpx 的请求日志，避免污染测试输出。"""
     logger = logging.getLogger("httpx")
     saved = logger.level
     logger.setLevel(logging.WARNING)

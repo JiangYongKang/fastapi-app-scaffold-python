@@ -30,9 +30,9 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.resources.errors import (
+    ResourceNotFoundError,
     ResourceNotReadyError,
     ResourceReleasedError,
-    ResourceNotFoundError,
 )
 
 logger = logging.getLogger("app.errors")

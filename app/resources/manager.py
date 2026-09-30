@@ -13,7 +13,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
 
 from app.resources.base import Resource, ResourceState
 from app.resources.errors import (

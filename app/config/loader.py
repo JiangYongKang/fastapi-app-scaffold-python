@@ -33,14 +33,12 @@ from app.config.errors import (
     UnknownConfigKeyError,
 )
 from app.config.schema import (
-    AppConfig,
-    ConfigKind,
     DEPRECATED_ENVS,
     DEPRECATED_FILE_KEYS,
     FIELDS,
-    FIELD_BY_ENV,
-    FIELD_BY_KEY,
     REQUIRED,
+    AppConfig,
+    ConfigKind,
     FieldSpec,
 )
 
@@ -101,57 +99,54 @@ def _read_toml(path: Path) -> dict[str, Any]:
 def _coerce(spec: FieldSpec, raw: Any, source: str) -> Any:
     """把原始值转换为字段声明类型；失败抛 ConfigTypeError。"""
     where = f"配置项 {spec.key!r}（来源: {source}）"
-    try:
-        if spec.kind is ConfigKind.STR:
-            if not isinstance(raw, str):
+    if spec.kind is ConfigKind.STR:
+        if not isinstance(raw, str):
+            raise ConfigTypeError(
+                f"{where} 的值类型为 {type(raw).__name__}，"
+                f"期望字符串 str"
+            )
+        value = raw.strip()
+    elif spec.kind is ConfigKind.INT:
+        if isinstance(raw, bool):
+            raise ConfigTypeError(
+                f"{where} 的值类型为 bool，期望整数 int"
+            )
+        if isinstance(raw, int):
+            value = raw
+        elif isinstance(raw, str):
+            token = raw.strip()
+            try:
+                value = int(token, 10)
+            except ValueError:
                 raise ConfigTypeError(
-                    f"{where} 的值类型为 {type(raw).__name__}，"
-                    f"期望字符串 str"
-                )
-            value = raw.strip()
-        elif spec.kind is ConfigKind.INT:
-            if isinstance(raw, bool):
-                raise ConfigTypeError(
-                    f"{where} 的值类型为 bool，期望整数 int"
-                )
-            if isinstance(raw, int):
-                value = raw
-            elif isinstance(raw, str):
-                token = raw.strip()
-                try:
-                    value = int(token, 10)
-                except ValueError:
-                    raise ConfigTypeError(
-                        f"{where} 的字符串值 {raw!r} 无法解析为整数"
-                    ) from None
+                    f"{where} 的字符串值 {raw!r} 无法解析为整数"
+                ) from None
+        else:
+            raise ConfigTypeError(
+                f"{where} 的值类型为 {type(raw).__name__}，"
+                f"期望整数 int"
+            )
+    elif spec.kind is ConfigKind.BOOL:
+        if isinstance(raw, bool):
+            value = raw
+        elif isinstance(raw, str):
+            token = raw.strip().lower()
+            if token in _TRUE_TOKENS:
+                value = True
+            elif token in _FALSE_TOKENS:
+                value = False
             else:
                 raise ConfigTypeError(
-                    f"{where} 的值类型为 {type(raw).__name__}，"
-                    f"期望整数 int"
+                    f"{where} 的字符串值 {raw!r} 无法解析为布尔值，"
+                    f"可选: true/false/1/0/yes/no/on/off"
                 )
-        elif spec.kind is ConfigKind.BOOL:
-            if isinstance(raw, bool):
-                value = raw
-            elif isinstance(raw, str):
-                token = raw.strip().lower()
-                if token in _TRUE_TOKENS:
-                    value = True
-                elif token in _FALSE_TOKENS:
-                    value = False
-                else:
-                    raise ConfigTypeError(
-                        f"{where} 的字符串值 {raw!r} 无法解析为布尔值，"
-                        f"可选: true/false/1/0/yes/no/on/off"
-                    )
-            else:
-                raise ConfigTypeError(
-                    f"{where} 的值类型为 {type(raw).__name__}，"
-                    f"期望布尔值 bool"
-                )
-        else:  # pragma: no cover - 防御性分支
-            raise ConfigTypeError(f"{where} 声明了未知类型 {spec.kind!r}")
-    except ConfigTypeError:
-        raise
+        else:
+            raise ConfigTypeError(
+                f"{where} 的值类型为 {type(raw).__name__}，"
+                f"期望布尔值 bool"
+            )
+    else:  # pragma: no cover - 防御性分支
+        raise ConfigTypeError(f"{where} 声明了未知类型 {spec.kind!r}")
     return value
 
 

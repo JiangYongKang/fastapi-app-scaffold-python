@@ -7,9 +7,9 @@ from app.resources.deps import resource_dependency
 from app.resources.errors import (
     ResourceAlreadyRegisteredError,
     ResourceError,
+    ResourceNotFoundError,
     ResourceNotReadyError,
     ResourceReleasedError,
-    ResourceNotFoundError,
 )
 from app.resources.manager import ResourceManager
 
@@ -18,9 +18,9 @@ __all__ = [
     "ResourceAlreadyRegisteredError",
     "ResourceError",
     "ResourceManager",
+    "ResourceNotFoundError",
     "ResourceNotReadyError",
     "ResourceReleasedError",
-    "ResourceNotFoundError",
     "ResourceState",
     "resource_dependency",
 ]
