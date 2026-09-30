@@ -1,0 +1,7 @@
+# Test environment overrides (APP_ENV=test).
+
+[service]
+debug = false
+
+[server]
+log_level = "warning"

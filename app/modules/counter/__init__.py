@@ -1,0 +1,1 @@
+"""Counter demo module."""

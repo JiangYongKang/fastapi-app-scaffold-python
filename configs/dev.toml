@@ -1,0 +1,7 @@
+# Local development overrides (APP_ENV=dev, the default).
+
+[server]
+log_level = "debug"
+
+[service]
+debug = true

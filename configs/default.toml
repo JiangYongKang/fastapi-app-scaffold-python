@@ -1,0 +1,17 @@
+# Default configuration layer.
+# Precedence: code defaults < this file < configs/<env>.toml < explicit file
+# (APP_CONFIG_FILE) < APP_* environment variables.
+# This file is intentionally minimal: the app works out of the box with the
+# code-level defaults alone; override only what you need here.
+
+[service]
+# name = "fastapi-app-scaffold"
+# debug = false
+
+[server]
+# host = "127.0.0.1"
+# port = 8000
+# log_level = "info"   # critical|error|warning|info|debug|trace
+
+[counter]
+# initial = 0

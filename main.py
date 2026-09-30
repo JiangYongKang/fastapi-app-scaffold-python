@@ -1,13 +1,12 @@
+"""Development entrypoint: ``python main.py`` / ``uv run uvicorn main:app``."""
+
+from __future__ import annotations
+
 import uvicorn
-from fastapi import FastAPI
 
-app = FastAPI()
+from app.factory import create_app
 
-
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
-
+app = create_app()
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=0)
