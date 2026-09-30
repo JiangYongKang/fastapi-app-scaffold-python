@@ -13,4 +13,9 @@ default = true
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
 ]
+
+[pytest]
+asyncio_mode = "auto"
+testpaths = ["tests"]
