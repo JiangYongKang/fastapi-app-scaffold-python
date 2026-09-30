@@ -7,3 +7,7 @@ __pycache__/
 dist/
 build/
 *.egg-info/
+
+# 本地真实环境配置（保留 *.example.toml 入库）
+configs/production.toml
+configs/staging.toml

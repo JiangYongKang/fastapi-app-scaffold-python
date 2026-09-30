@@ -1,0 +1,14 @@
+# 生产环境示例配置：复制为 production.toml 并按需修改。
+# 启动：APP_ENVIRONMENT=production uvicorn main:app
+
+[app]
+environment = "production"
+debug = false
+log_level = "INFO"
+
+[api]
+prefix = "/api"
+
+[server]
+host = "0.0.0.0"
+port = 8000
