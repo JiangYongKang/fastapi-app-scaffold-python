@@ -194,10 +194,12 @@ def _validate(spec: FieldSpec, value: Any, source: str) -> Any:
     return value
 
 
-def _check_deprecated_env(env_map: dict[str, str]) -> None:
+def _check_deprecated_env(
+    env_map: dict[str, str], deprecated_envs: dict[str, str]
+) -> None:
     offenders = [
         (name, replacement)
-        for name, replacement in DEPRECATED_ENVS.items()
+        for name, replacement in deprecated_envs.items()
         if name in env_map and env_map[name] != ""
     ]
     if offenders:
@@ -208,10 +210,14 @@ def _check_deprecated_env(env_map: dict[str, str]) -> None:
         raise DeprecatedConfigError("；".join(lines))
 
 
-def _check_deprecated_and_unknown_file(file_values: dict[str, Any]) -> None:
+def _check_deprecated_and_unknown_file(
+    file_values: dict[str, Any],
+    field_by_key: dict[str, FieldSpec],
+    deprecated_file_keys: dict[str, str],
+) -> None:
     deprecated = [
         (key, replacement)
-        for key, replacement in DEPRECATED_FILE_KEYS.items()
+        for key, replacement in deprecated_file_keys.items()
         if key in file_values
     ]
     if deprecated:
@@ -221,9 +227,9 @@ def _check_deprecated_and_unknown_file(file_values: dict[str, Any]) -> None:
         ]
         raise DeprecatedConfigError("；".join(lines))
 
-    unknown = sorted(key for key in file_values if key not in FIELD_BY_KEY)
+    unknown = sorted(key for key in file_values if key not in field_by_key)
     if unknown:
-        allowed = ", ".join(sorted(FIELD_BY_KEY))
+        allowed = ", ".join(sorted(field_by_key))
         raise UnknownConfigKeyError(
             f"配置文件出现未定义的配置项: {', '.join(unknown)}；"
             f"已知配置项: {allowed}"
@@ -234,6 +240,10 @@ def load_settings(
     config_path: str | None = None,
     environment: str | None = None,
     environ: dict[str, str] | None = None,
+    *,
+    fields: tuple[FieldSpec, ...] = FIELDS,
+    deprecated_file_keys: dict[str, str] | None = None,
+    deprecated_envs: dict[str, str] | None = None,
 ) -> tuple[AppConfig, dict[str, dict[str, Any]]]:
     """加载并校验配置。
 
@@ -242,17 +252,31 @@ def load_settings(
 
     任何非法情况都在本函数内抛出 :class:`ConfigError` 子类，
     即"启动阶段就失败"。
+
+    ``fields`` / 两个废弃映射仅用于扩展或测试，默认使用
+    :mod:`app.config.schema` 中的内置声明。
     """
+    deprecated_file_keys = (
+        DEPRECATED_FILE_KEYS if deprecated_file_keys is None
+        else deprecated_file_keys
+    )
+    deprecated_envs = (
+        DEPRECATED_ENVS if deprecated_envs is None else deprecated_envs
+    )
+    field_by_key = {f.key: f for f in fields}
+
     env_map = os.environ if environ is None else environ
 
     # 1) 废弃环境变量优先检查（显式拒绝，绝不静默忽略）
-    _check_deprecated_env(env_map)
+    _check_deprecated_env(env_map, deprecated_envs)
 
     # 2) 解析并读取配置文件
     path = resolve_config_path(environment, config_path, env_map)
     raw_file = _flatten(_read_toml(path)) if path is not None else {}
     file_label = f"file:{path}" if path is not None else "file:<未加载>"
-    _check_deprecated_and_unknown_file(raw_file)
+    _check_deprecated_and_unknown_file(
+        raw_file, field_by_key, deprecated_file_keys
+    )
 
     resolved: dict[str, dict[str, Any]] = {}
     raw_layers: dict[str, dict[str, Any]] = {
@@ -262,7 +286,7 @@ def load_settings(
     }
 
     # 3) 逐字段按优先级合并：默认值 < 文件 < 环境变量
-    for spec in FIELDS:
+    for spec in fields:
         default_value = None if spec.default is REQUIRED else spec.default
         raw_layers["default"][spec.key] = default_value
 
